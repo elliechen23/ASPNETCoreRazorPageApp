@@ -47,19 +47,20 @@
                         <th>公債<br />代號</th>
                         <th>公債<br />名稱</th>
                         <th>公債發<br />行總額</th>
+                        <!--<th>公債發<br />行餘額</th>-->
                         <th>公債<br />年期</th>
                         <th>票面<br />利率<br />%</th>
                         <th>公債<br />發行日</th>
                         <th>公債<br />到期日</th>
                         <th>清算<br />銀行</th>
-                        <th>公債<br />總餘額</th>
-                        <th>公債<br />總利息</th>
-                        <th>已付<br />總利息</th>
                         <th>客戶<br />帳號</th>
                         <th>公債<br />餘額</th>
+                        <th>公債<br />總餘額</th>
+                        <th>公債<br />總利息</th>
                         <th>已付<br />利息</th>
+                        <th>已付<br />總利息</th>
                         <th>下次<br />付息日</th>
-
+                    </tr>
                     </tr>
                 </thead>
                 <tbody id="bonds" class="table table-striped"></tbody>
@@ -110,7 +111,34 @@ $(document).ready(function() {
                             var json = JSON.parse(data2);
                             console.log(json);
                             $("#dvPostResult").html("公債已付息日設定為：" + json)
-                            $("#paidday").val(json);
+                            if(json!=""){
+                                $("#paidday").val(json);
+                            }
+                            var TXDAY="2019/06/02"
+                            if($("#paidday").val()!=""){
+                                TXDAY=$("#paidday").val()
+                            }
+                            data = '{"peers": ["peer0.org1.example.com", "peer1.org1.example.com"],"fcn": "updateOwnerInterest","args": ["A07106","' + TXDAY + '"]}'
+                            // 使用 ajax() 來呼叫 REST API
+                            $.ajax({
+                                url: site + "/channels/mychannel/chaincodes/mycc",
+                                type: "POST",
+                                data: data,
+                                contentType: "application/json; charset=utf-8",
+                                complete: function(data, textStatus, jqXHR) {
+                                    console.log(textStatus);
+                                },
+                                success: function(data, textStatus, jqXHR) {
+                                    console.log(data);
+                                    $("#dvPostResult").html('交易TXID:<br/><b>' + data + '</b>');
+                                    
+
+                                  
+                                },
+                                //beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTY2NjcwMDMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTY2MzEwMDN9.TTXLF5Z4dv5FdWD5qJ_W19jXb6H1WdIzGJ6QnDJ_qBE"); }
+                                beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
+                            });
+
 
                         },
                         error: function(jqXHR) {
@@ -185,17 +213,18 @@ $(document).ready(function() {
                             + "<td>" + json.SecurityID + "</td>"
                             + "<td>" + json.SecurityName + "</td>"
                             + "<td align=right>" + numberWithCommas(json.TotalAmount) + "</td>"
+                            //+ "<td align=right>" + numberWithCommas(json.Balance) + "</td>"
                             + "<td>" + json.RepayPeriod + "</td>"
                             + "<td>" + json.InterestRate + "</td>"
                             + "<td>" + json.IssueDate + "</td>"
                             + "<td>" + json.MaturityDate + "</td>"
                             + "<td>BANK" + json.Owners[i].OwnedBankID + "</td>"
-                            + "<td align=right>" + numberWithCommas(BankTotalAmout) + "</td>"
-                            + "<td align=right>" + numberWithCommas(BankTotalInterest) + "</td>"
-                            + "<td align=right>" + numberWithCommas(BankPaidDurationInterest) + "</td>"
                             + "<td>" + json.Owners[i].OwnedAccountID + "</td>"
                             + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedBalance) + "</td>"
+                            + "<td align=right>" + numberWithCommas(BankTotalAmout) + "</td>"
+                            + "<td align=right>" + numberWithCommas(BankTotalInterest) + "</td>"
                             + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedPaidDurationInterest) + "</td>"
+                            + "<td align=right>" + numberWithCommas(BankPaidDurationInterest) + "</td>"
                             + "<td>" + OwnedDurationDate + "</td>"
                             + "</tr>"
                         $('#bonds').append(htmlCode);
@@ -213,28 +242,7 @@ $(document).ready(function() {
                     //    }
 
                     //});
-                    //data = '{"peers": ["peer0.org1.example.com", "peer1.org1.example.com"],"fcn": "updateOwnerInterest","args": ["A07106","20190602"]}'
-                    // 使用 ajax() 來呼叫 REST API
-                    //$.ajax({
-                    //    url: site + "/channels/mychannel/chaincodes/mycc",
-                    //    type: "POST",
-                    //    data: data,
-                    //    contentType: "application/json; charset=utf-8",
-                    //    complete: function(data, textStatus, jqXHR) {
-                    //        console.log(textStatus);
-                    //    },
-                    //    success: function(data, textStatus, jqXHR) {
-                    //        console.log(data);
-                    //        $("#dvPostResult").html('交易TXID:<br/><b>' + data + '</b>');
-                            
-
-                          
-                    //    },
-                        //beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTY2NjcwMDMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTY2MzEwMDN9.TTXLF5Z4dv5FdWD5qJ_W19jXb6H1WdIzGJ6QnDJ_qBE"); }
-                    //    beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
-                    //});
-
-
+                   
                 },
                 error: function(jqXHR) {
                     alert("發生錯誤: " + jqXHR.status);

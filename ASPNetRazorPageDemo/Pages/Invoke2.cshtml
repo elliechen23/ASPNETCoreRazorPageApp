@@ -42,7 +42,7 @@
     <br />
     <div id="resulttx2" class="container-fluid">
         <div class="table-responsive">
-            <table id="tb2" class="table table-striped table-bordered table-hover" border="1">
+            <table id="tb2" class="table table-striped table-bordered table-hover sortable" border="1">
                 <thead>
                     <tr>
                         <th>交易<br />序號</th>
@@ -58,6 +58,8 @@
                         <th>交易<br />說明</th>
                         <th>原交易<br />序號</th>
                         <th>比對<br />序號</th>
+                        <th>建立<br />時間</th>
+                        <th>更新<br />時間</th>
                     </tr>
                 </thead>
                 <tbody id="bank" class="table table-striped"></tbody>
@@ -208,6 +210,8 @@
                                 + "<td>" + json.TXMemo + "</td>"
                                 + "<td>" + json.TXHcode + "</td>"
                                 + "<td>" + json.MatchedTXID + "</td>"
+                                + "<td>" + json.createTime + "</td>"
+                                + "<td>" + json.updateTime + "</td>"
                                 + "</tr>"
                             $('#bank').append(htmlCode);
                             $.ajax({
@@ -269,6 +273,8 @@
                                         + "<td>" + json.TXMemo + "</td>"
                                         + "<td>" + json.TXHcode + "</td>"
                                         + "<td>" + json.MatchedTXID + "</td>"
+                                        + "<td>" + json.createTime + "</td>"
+                                        + "<td>" + json.updateTime + "</td>"
                                         + "</tr>"
                                     if (json.TXID != "") {
                                         $('#bank').append(htmlCode);
@@ -361,6 +367,8 @@
                         + "<td>" + json.TXMemo + "</td>"
                         + "<td>" + json.TXHcode + "</td>"
                         + "<td>" + json.MatchedTXID + "</td>"
+                        + "<td>" + json.createTime + "</td>"
+                        + "<td>" + json.updateTime + "</td>"
                         + "</tr>"
                     $('#bank').append(htmlCode);
                     $.ajax({
@@ -420,6 +428,8 @@
                                 + "<td>" + json.TXMemo + "</td>"
                                 + "<td>" + json.TXHcode + "</td>"
                                 + "<td>" + json.MatchedTXID + "</td>"
+                                + "<td>" + json.createTime + "</td>"
+                                + "<td>" + json.updateTime + "</td>"
                                 + "</tr>"
                             if (json.TXID != "") {
                                 $('#bank').append(htmlCode);

@@ -52,7 +52,7 @@
         <hr>
         <div id="resulttx2" class="container-fluid">
             <div class="table-responsive">
-                <table id="tb2" class="table table-striped table-bordered table-hover" border="1">
+                <table id="tb2" class="table table-striped table-bordered table-hover sortable" border="1">
                     <thead>
                         <tr>
                             <th>交易<br />序號</th>
@@ -68,6 +68,8 @@
                             <th>交易<br />說明</th>
                             <th>原交易<br />序號</th>
                             <th>比對<br />序號</th>
+                            <th>建立<br />時間</th>
+                            <th>更新<br />時間</th>
                         </tr>
                     </thead>
                     <tbody id="bank" class="table table-striped"></tbody>
@@ -116,14 +118,15 @@
             }
         })
 
-        var SecurityID, TXTYPE, TXStatus, TXMemo, BANKFROM, BANKTO, TXFROM, TXFROM2, TXTO, TXTO2, TXKIND, TXAMT, newTXStatus, newAmountStyle, newBalanceStyle;
+        var SecurityID, TXTYPE, TXTYPE2, TXStatus, TXMemo, BANKFROM, BANKTO, TXFROM, TXFROM2, TXTO, TXTO2, TXKIND, TXAMT, newTXStatus, newAmountStyle, newBalanceStyle;
 
         //peer chaincode invoke -n mycc -c '{"Args":["securityCorrectTransfer", "S","004000000001" , "002000000001" , "A07106" , "102000","100000","true","BANK002B00200000000120180606155851"]}' -C myc
 
         $("#approve").click(function() {
-            data = '{"peers": ["peer0.org1.example.com", "peer1.org1.example.com"],"fcn": "securityCorrectTransfer","args": ["' + TXTYPE + '","' + TXFROM2 + '","' + TXTO2 + '","' + SecurityID + '","' + $("#amount").val() + '","' + $("#balance").val() + '","true","' + $("#txid").val() + '"]}'
-            //alert(data);
+            data = '{"peers": ["peer0.org1.example.com", "peer1.org1.example.com"],"fcn": "securityCorrectTransfer","args": ["' + TXTYPE2 + '","' + TXFROM2 + '","' + TXTO2 + '","' + SecurityID + '","' + $("#amount").val() + '","' + $("#balance").val() + '","true","' + $("#txid").val() + '"]}'
+            alert(data);
             var MatchedTXID = ""
+            var TXHcode = ""
             // 使用 ajax() 來呼叫 REST API
             $.ajax({
                 url: site + "/channels/mychannel/chaincodes/mycc",
@@ -204,6 +207,8 @@
                                 + "<td>" + json.TXMemo + "</td>"
                                 + "<td>" + json.TXHcode + "</td>"
                                 + "<td>" + json.MatchedTXID + "</td>"
+                                + "<td>" + json.createTime + "</td>"
+                                + "<td>" + json.updateTime + "</td>"
                                 + "</tr>"
                             $('#bank').append(htmlCode);
                             $("#balance").val(json.Payment);
@@ -214,7 +219,7 @@
                             TXDAY = $('#txday').val()
 
                             data = '{"peers": ["peer0.org1.example.com", "peer1.org1.example.com"],"fcn": "updateQueuedTransactionHcode","args": ["' + TXDAY + '","' + TXID + '","' + TXHcode + '"]}'
-                            alert(data)
+                            //alert(data)
                             // 使用 ajax() 來呼叫 REST API
                             $.ajax({
                                 url: site + "/channels/mychannel/chaincodes/mycc",
@@ -227,7 +232,172 @@
                                 success: function(data, textStatus, jqXHR) {
                                     console.log(data);
                                     $("#dvPostResult").html('交易TXID:<br/><b>' + data + '</b>');
+                                    if (TXHcode != "") {
+                                        $.ajax({
+                                            type: "GET",
+                                            url: site + "/channels/mychannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=queryTXIDTransactions&args=%5B%22" + TXHcode + "%22%5D",
+                                            dataType: "html",
+                                            success: function(data) {
+                                                var data1 = data.replace(' now has', '');
+                                                var data2 = data1.replace(' after the move', '');
+                                                //$('#bank').html("")
+                                                var json = JSON.parse(data2);
+                                                console.log(json);
+                                                $("#dvPostResult").html(json.docType + " loaded successfully.");
 
+                                                TXTYPE = json.TXType
+                                                SecurityID = json.SecurityID
+                                                TXStatus = json.TXStatus
+                                                newTXStatus = formatTXStatus(TXStatus)
+                                                TXMemo = json.TXMemo
+                                                newAmountStyle = formatAmount(TXMemo)
+                                                newBalanceStyle = formatBalance(TXMemo)
+
+                                                if (TXTYPE == "S") {
+                                                    BANKFROM = json.BankFrom
+                                                    BANKTO = json.BankTo
+                                                    TXFROM = json.TXFrom
+                                                    TXFROM2 = json.TXFrom
+                                                    TXTO = json.TXTo
+                                                    TXTO2 = json.TXTo
+                                                    TXKIND = "轉出"
+                                                }
+                                                if (TXTYPE == "B") {
+                                                    BANKFROM = json.BankTo
+                                                    BANKTO = json.BankFrom
+                                                    TXFROM = json.TXTo
+                                                    TXFROM2 = json.TXFrom
+                                                    TXTO = json.TXFrom
+                                                    TXTO2 = json.TXTo
+                                                    TXKIND = "轉入"
+                                                }
+                                                if (BANKFROM == BANKTO) {
+                                                    TXKIND = "自行" + TXKIND
+                                                }
+                                                else {
+                                                    TXKIND = "跨行" + TXKIND
+                                                }
+                                                MatchedTXID = json.MatchedTXID
+                                                var htmlCode =
+                                                    "<tr>"
+                                                    + "<td>" + json.TXID + "</td>"
+                                                    + "<td>" + TXKIND + "</td>"
+                                                    + "<td>" + BANKFROM + "</td>"
+                                                    + "<td>" + TXFROM + "</td>"
+                                                    + "<td>" + BANKTO + "</td>"
+                                                    + "<td>" + TXTO + "</td>"
+                                                    + "<td align=right" + newAmountStyle + ">" + numberWithCommas(json.Payment) + "</td>"
+                                                    + "<td align=right" + newBalanceStyle + ">" + numberWithCommas(json.SecurityAmount) + "</td>"
+                                                    + "<td>" + json.SecurityID + "</td>"
+                                                    + "<td>" + newTXStatus + "</td>"
+                                                    + "<td>" + json.TXMemo + "</td>"
+                                                    + "<td>" + json.TXHcode + "</td>"
+                                                    + "<td>" + json.MatchedTXID + "</td>"
+                                                    + "<td>" + json.createTime + "</td>"
+                                                    + "<td>" + json.updateTime + "</td>"
+                                                    + "</tr>"
+                                                if (json.TXID != "") {
+                                                    $('#bank').append(htmlCode);
+                                                }
+                                                if (MatchedTXID != "") {
+                                                    $.ajax({
+                                                        type: "GET",
+                                                        url: site + "/channels/mychannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=queryTXIDTransactions&args=%5B%22" + MatchedTXID + "%22%5D",
+                                                        dataType: "html",
+                                                        success: function(data) {
+                                                            var data1 = data.replace(' now has', '');
+                                                            var data2 = data1.replace(' after the move', '');
+                                                            //$('#bank').html("")
+                                                            var json = JSON.parse(data2);
+                                                            console.log(json);
+                                                            $("#dvPostResult").html(json.docType + " loaded successfully.");
+
+                                                            TXTYPE = json.TXType
+                                                            SecurityID = json.SecurityID
+                                                            TXStatus = json.TXStatus
+                                                            newTXStatus = formatTXStatus(TXStatus)
+                                                            TXMemo = json.TXMemo
+                                                            newAmountStyle = formatAmount(TXMemo)
+                                                            newBalanceStyle = formatBalance(TXMemo)
+
+                                                            if (TXTYPE == "S") {
+                                                                BANKFROM = json.BankFrom
+                                                                BANKTO = json.BankTo
+                                                                TXFROM = json.TXFrom
+                                                                TXFROM2 = json.TXFrom
+                                                                TXTO = json.TXTo
+                                                                TXTO2 = json.TXTo
+                                                                TXKIND = "轉出"
+                                                            }
+                                                            if (TXTYPE == "B") {
+                                                                BANKFROM = json.BankTo
+                                                                BANKTO = json.BankFrom
+                                                                TXFROM = json.TXTo
+                                                                TXFROM2 = json.TXFrom
+                                                                TXTO = json.TXFrom
+                                                                TXTO2 = json.TXTo
+                                                                TXKIND = "轉入"
+                                                            }
+                                                            if (BANKFROM == BANKTO) {
+                                                                TXKIND = "自行" + TXKIND
+                                                            }
+                                                            else {
+                                                                TXKIND = "跨行" + TXKIND
+                                                            }
+                                                            MatchedTXID = json.MatchedTXID
+                                                            var htmlCode =
+                                                                "<tr>"
+                                                                + "<td>" + json.TXID + "</td>"
+                                                                + "<td>" + TXKIND + "</td>"
+                                                                + "<td>" + BANKFROM + "</td>"
+                                                                + "<td>" + TXFROM + "</td>"
+                                                                + "<td>" + BANKTO + "</td>"
+                                                                + "<td>" + TXTO + "</td>"
+                                                                + "<td align=right" + newAmountStyle + ">" + numberWithCommas(json.Payment) + "</td>"
+                                                                + "<td align=right" + newBalanceStyle + ">" + numberWithCommas(json.SecurityAmount) + "</td>"
+                                                                + "<td>" + json.SecurityID + "</td>"
+                                                                + "<td>" + newTXStatus + "</td>"
+                                                                + "<td>" + json.TXMemo + "</td>"
+                                                                + "<td>" + json.TXHcode + "</td>"
+                                                                + "<td>" + json.MatchedTXID + "</td>"
+                                                                + "<td>" + json.createTime + "</td>"
+                                                                + "<td>" + json.updateTime + "</td>"
+                                                                + "</tr>"
+                                                            if (json.TXID != "") {
+                                                                $('#bank').append(htmlCode);
+                                                            }
+
+
+
+                                                        },
+                                                        error: function(jqXHR) {
+                                                            alert("發生錯誤: " + jqXHR.status);
+                                                            console.log(jqXHR);
+                                                        },
+                                                        //beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTY2NjcwMDMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTY2MzEwMDN9.TTXLF5Z4dv5FdWD5qJ_W19jXb6H1WdIzGJ6QnDJ_qBE"); }
+                                                        beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
+                                                    })
+
+                                                }
+
+
+
+                                            },
+                                            error: function(jqXHR) {
+                                                alert("發生錯誤: " + jqXHR.status);
+                                                console.log(jqXHR);
+                                            },
+                                            //beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTY2NjcwMDMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTY2MzEwMDN9.TTXLF5Z4dv5FdWD5qJ_W19jXb6H1WdIzGJ6QnDJ_qBE"); }
+                                            beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
+                                        })
+
+                                    }
+
+
+                                },
+                                error: function(jqXHR) {
+                                    alert("發生錯誤: " + jqXHR.status);
+                                    console.log(jqXHR);
                                 },
                                 //beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTY2NjcwMDMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTY2MzEwMDN9.TTXLF5Z4dv5FdWD5qJ_W19jXb6H1WdIzGJ6QnDJ_qBE"); }
                                 beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
@@ -270,7 +440,7 @@
                     TXMemo = json.TXMemo
                     newAmountStyle = formatAmount(TXMemo)
                     newBalanceStyle = formatBalance(TXMemo)
-
+                    TXTYPE2 = TXTYPE
                     if (TXTYPE == "S") {
                         BANKFROM = json.BankFrom
                         BANKTO = json.BankTo
@@ -311,10 +481,173 @@
                         + "<td>" + json.TXMemo + "</td>"
                         + "<td>" + json.TXHcode + "</td>"
                         + "<td>" + json.MatchedTXID + "</td>"
+                        + "<td>" + json.createTime + "</td>"
+                        + "<td>" + json.updateTime + "</td>"
                         + "</tr>"
                     $('#bank').append(htmlCode);
                     $("#balance").val(json.Payment);
                     $("#amount").val(json.SecurityAmount);
+                    $("#txday").val(json.TXID.substr(18, 8));
+                    TXHcode = json.TXHcode
+                    if (TXHcode != "") {
+                        $.ajax({
+                            type: "GET",
+                            url: site + "/channels/mychannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=queryTXIDTransactions&args=%5B%22" + TXHcode + "%22%5D",
+                            dataType: "html",
+                            success: function(data) {
+                                var data1 = data.replace(' now has', '');
+                                var data2 = data1.replace(' after the move', '');
+                                //$('#bank').html("")
+                                var json = JSON.parse(data2);
+                                console.log(json);
+                                $("#dvPostResult").html(json.docType + " loaded successfully.");
+
+                                TXTYPE = json.TXType
+                                SecurityID = json.SecurityID
+                                TXStatus = json.TXStatus
+                                newTXStatus = formatTXStatus(TXStatus)
+                                TXMemo = json.TXMemo
+                                newAmountStyle = formatAmount(TXMemo)
+                                newBalanceStyle = formatBalance(TXMemo)
+
+                                if (TXTYPE == "S") {
+                                    BANKFROM = json.BankFrom
+                                    BANKTO = json.BankTo
+                                    TXFROM = json.TXFrom
+                                    TXFROM2 = json.TXFrom
+                                    TXTO = json.TXTo
+                                    TXTO2 = json.TXTo
+                                    TXKIND = "轉出"
+                                }
+                                if (TXTYPE == "B") {
+                                    BANKFROM = json.BankTo
+                                    BANKTO = json.BankFrom
+                                    TXFROM = json.TXTo
+                                    TXFROM2 = json.TXFrom
+                                    TXTO = json.TXFrom
+                                    TXTO2 = json.TXTo
+                                    TXKIND = "轉入"
+                                }
+                                if (BANKFROM == BANKTO) {
+                                    TXKIND = "自行" + TXKIND
+                                }
+                                else {
+                                    TXKIND = "跨行" + TXKIND
+                                }
+                                MatchedTXID = json.MatchedTXID
+                                var htmlCode =
+                                    "<tr>"
+                                    + "<td>" + json.TXID + "</td>"
+                                    + "<td>" + TXKIND + "</td>"
+                                    + "<td>" + BANKFROM + "</td>"
+                                    + "<td>" + TXFROM + "</td>"
+                                    + "<td>" + BANKTO + "</td>"
+                                    + "<td>" + TXTO + "</td>"
+                                    + "<td align=right" + newAmountStyle + ">" + numberWithCommas(json.Payment) + "</td>"
+                                    + "<td align=right" + newBalanceStyle + ">" + numberWithCommas(json.SecurityAmount) + "</td>"
+                                    + "<td>" + json.SecurityID + "</td>"
+                                    + "<td>" + newTXStatus + "</td>"
+                                    + "<td>" + json.TXMemo + "</td>"
+                                    + "<td>" + json.TXHcode + "</td>"
+                                    + "<td>" + json.MatchedTXID + "</td>"
+                                    + "<td>" + json.createTime + "</td>"
+                                    + "<td>" + json.updateTime + "</td>"
+                                    + "</tr>"
+                                if (json.TXID != "") {
+                                    $('#bank').append(htmlCode);
+                                }
+                                if (MatchedTXID != "") {
+                                    $.ajax({
+                                        type: "GET",
+                                        url: site + "/channels/mychannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=queryTXIDTransactions&args=%5B%22" + MatchedTXID + "%22%5D",
+                                        dataType: "html",
+                                        success: function(data) {
+                                            var data1 = data.replace(' now has', '');
+                                            var data2 = data1.replace(' after the move', '');
+                                            //$('#bank').html("")
+                                            var json = JSON.parse(data2);
+                                            console.log(json);
+                                            $("#dvPostResult").html(json.docType + " loaded successfully.");
+
+                                            TXTYPE = json.TXType
+                                            SecurityID = json.SecurityID
+                                            TXStatus = json.TXStatus
+                                            newTXStatus = formatTXStatus(TXStatus)
+                                            TXMemo = json.TXMemo
+                                            newAmountStyle = formatAmount(TXMemo)
+                                            newBalanceStyle = formatBalance(TXMemo)
+
+                                            if (TXTYPE == "S") {
+                                                BANKFROM = json.BankFrom
+                                                BANKTO = json.BankTo
+                                                TXFROM = json.TXFrom
+                                                TXFROM2 = json.TXFrom
+                                                TXTO = json.TXTo
+                                                TXTO2 = json.TXTo
+                                                TXKIND = "轉出"
+                                            }
+                                            if (TXTYPE == "B") {
+                                                BANKFROM = json.BankTo
+                                                BANKTO = json.BankFrom
+                                                TXFROM = json.TXTo
+                                                TXFROM2 = json.TXFrom
+                                                TXTO = json.TXFrom
+                                                TXTO2 = json.TXTo
+                                                TXKIND = "轉入"
+                                            }
+                                            if (BANKFROM == BANKTO) {
+                                                TXKIND = "自行" + TXKIND
+                                            }
+                                            else {
+                                                TXKIND = "跨行" + TXKIND
+                                            }
+                                            MatchedTXID = json.MatchedTXID
+                                            var htmlCode =
+                                                "<tr>"
+                                                + "<td>" + json.TXID + "</td>"
+                                                + "<td>" + TXKIND + "</td>"
+                                                + "<td>" + BANKFROM + "</td>"
+                                                + "<td>" + TXFROM + "</td>"
+                                                + "<td>" + BANKTO + "</td>"
+                                                + "<td>" + TXTO + "</td>"
+                                                + "<td align=right" + newAmountStyle + ">" + numberWithCommas(json.Payment) + "</td>"
+                                                + "<td align=right" + newBalanceStyle + ">" + numberWithCommas(json.SecurityAmount) + "</td>"
+                                                + "<td>" + json.SecurityID + "</td>"
+                                                + "<td>" + newTXStatus + "</td>"
+                                                + "<td>" + json.TXMemo + "</td>"
+                                                + "<td>" + json.TXHcode + "</td>"
+                                                + "<td>" + json.MatchedTXID + "</td>"
+                                                + "<td>" + json.createTime + "</td>"
+                                                + "<td>" + json.updateTime + "</td>"
+                                                + "</tr>"
+                                            if (json.TXID != "") {
+                                                $('#bank').append(htmlCode);
+                                            }
+
+
+
+                                        },
+                                        error: function(jqXHR) {
+                                            alert("發生錯誤: " + jqXHR.status);
+                                            console.log(jqXHR);
+                                        },
+                                        //beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTY2NjcwMDMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTY2MzEwMDN9.TTXLF5Z4dv5FdWD5qJ_W19jXb6H1WdIzGJ6QnDJ_qBE"); }
+                                        beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
+                                    })
+
+                                }
+
+
+                            },
+                            error: function(jqXHR) {
+                                alert("發生錯誤: " + jqXHR.status);
+                                console.log(jqXHR);
+                            },
+                            //beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization','Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MTY2NjcwMDMsInVzZXJuYW1lIjoiSmltIiwib3JnTmFtZSI6Im9yZzEiLCJpYXQiOjE1MTY2MzEwMDN9.TTXLF5Z4dv5FdWD5qJ_W19jXb6H1WdIzGJ6QnDJ_qBE"); }
+                            beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
+                        })
+
+                    }
 
                 },
                 error: function(jqXHR) {

@@ -19,8 +19,11 @@
     <Content Remove="Pages\Index.cshtml" />
     <Content Remove="Pages\Index.cshtml" />
     <Content Remove="Pages\Index %28copy%29.cshtml" />
+    <Content Remove="Pages\Invoke2 %28copy%29.cshtml" />
+    <Content Remove="Pages\Invoke5.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Pages\Index.cshtml" />
+    <None Include="Pages\Invoke5.cshtml" />
   </ItemGroup>
 </Project>

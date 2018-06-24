@@ -36,7 +36,7 @@
     <div class="col-md-8">
         <label for="security_id">公債代號：</label>
         <input type="text" id="security_id" value="A07106" placeholder="公債代號">&nbsp;&nbsp;&nbsp;&nbsp;
-        <label for="txday">估算日期：</label>
+        <label for="txday">付息日期：</label>
         <input type="text" id="txday" value="2019/06/02" placeholder="YYYY/MM/DD">&nbsp;&nbsp;&nbsp;&nbsp;
         <button id="submit">確定</button>
     </div>
@@ -44,22 +44,22 @@
     <br />
     <div id="result" class="container">
         <div class="table-responsive">
-            <table id="tb2" class="table table-striped table-bordered table-hover" border="1">
+            <table id="tb2" class="table table-striped table-bordered table-hover sortable" border="1">
                 <thead>
                     <tr>
                         <th>公債<br />代號</th>
                         <th>公債<br />名稱</th>
                         <th>公債<br />年期</th>
-                        <th>票面<br />利率<br />%</th>
+                        <th>票面<br />利率%</th>
                         <th>公債<br />發行日</th>
                         <th>公債<br />到期日</th>
                         <th>清算<br />銀行</th>
+                        <th>客戶<br />帳號</th>
+                        <th>公債<br />餘額</th>
                         <th>公債<br />總餘額</th>
                         <th>公債<br />總利息</th>
+                        <th>已付<br />利息</th>
                         <th>已付<br />總利息</th>
-                        <th>客戶<br />帳號</th>
-                        <th>客戶公<br />債餘額</th>
-                        <th>客戶已<br />收利息</th>
                         <th>下次<br />付息日</th>
                     </tr>
                 </thead>
@@ -240,12 +240,12 @@
                                                                         + "<td>" + json.IssueDate + "</td>"
                                                                         + "<td>" + json.MaturityDate + "</td>"
                                                                         + "<td>BANK" + json.Owners[i].OwnedBankID + "</td>"
-                                                                        + "<td align=right>" + numberWithCommas(BankTotalAmout) + "</td>"
-                                                                        + "<td align=right>" + numberWithCommas(BankTotalInterest) + "</td>"
-                                                                        + "<td align=right>" + numberWithCommas(BankPaidDurationInterest) + "</td>"
                                                                         + "<td>" + json.Owners[i].OwnedAccountID + "</td>"
                                                                         + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedBalance) + "</td>"
+                                                                        + "<td align=right>" + numberWithCommas(BankTotalAmout) + "</td>"
+                                                                        + "<td align=right>" + numberWithCommas(BankTotalInterest) + "</td>"
                                                                         + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedPaidDurationInterest) + "</td>"
+                                                                        + "<td align=right>" + numberWithCommas(BankPaidDurationInterest) + "</td>"
                                                                         + "<td>" + OwnedDurationDate + "</td>"
                                                                         + "</tr>"
                                                                     $('#bonds').append(htmlCode);
