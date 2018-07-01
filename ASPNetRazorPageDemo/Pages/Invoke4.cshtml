@@ -127,8 +127,9 @@
             })
                 .then((willDelete) => {
                     if (willDelete) {
-                        swal("放行成功", {
+                        swal("", {
                             icon: "success",
+                            title: "放行成功"
                         });
                         data = '{"peers": ["peer0.org1.example.com", "peer1.org1.example.com"],"fcn": "updateOwnerInterest","args": ["' + $("#security_id").val() + '","' + $("#txday").val() + '"]}'
                         // 使用 ajax() 來呼叫 REST API
