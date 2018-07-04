@@ -39,6 +39,10 @@
     </div>
     <br/>
     <br/>
+    <div id="reportTableDiv">
+        <table id="reportTable"></table>
+    </div>
+    <!--
     <div id="result" class="container">
         <div class="table-responsive">
             <table id="tb1" class="table table-striped table-bordered table-hover" border="1">
@@ -47,7 +51,7 @@
                         <th>公債<br />代號</th>
                         <th>公債<br />名稱</th>
                         <th>公債發<br />行總額</th>
-                        <!--<th>公債發<br />行餘額</th>-->
+                        <th>公債發<br />行餘額</th>
                         <th>公債<br />年期</th>
                         <th>票面<br />利率<br />%</th>
                         <th>公債<br />發行日</th>
@@ -67,6 +71,7 @@
             </table>
         </div>
     </div>
+-->
 </div>
 
 <br />
@@ -168,6 +173,9 @@ $(document).ready(function() {
                     var data1 = data.replace($("#security_id").val() + ' now has', '');
                     var data2 = data1.replace(' after the move', '');
                     $('#bonds').html("")
+                    var datas = [];
+                    $('#reportTable').html("");
+                    $('#reportTable').bootstrapTable('destroy');
                     var json = JSON.parse(data2);
                     console.log(json);
                     $("#dvPostResult").html(json.docType + " loaded successfully.");
@@ -208,29 +216,81 @@ $(document).ready(function() {
                         }
                         var OwnedDurationDate = json.Owners[i].OwnedDurationDate[Duration];
     
-                        var htmlCode =
-                            "<tr>"
-                            + "<td>" + json.SecurityID + "</td>"
-                            + "<td>" + json.SecurityName + "</td>"
-                            + "<td align=right>" + numberWithCommas(json.TotalAmount) + "</td>"
+                      //  var htmlCode =
+                      //      "<tr>"
+                      //      + "<td>" + json.SecurityID + "</td>"
+                      //      + "<td>" + json.SecurityName + "</td>"
+                      //      + "<td align=right>" + numberWithCommas(json.TotalAmount) + "</td>"
                             //+ "<td align=right>" + numberWithCommas(json.Balance) + "</td>"
-                            + "<td>" + json.RepayPeriod + "</td>"
-                            + "<td>" + json.InterestRate + "</td>"
-                            + "<td>" + json.IssueDate + "</td>"
-                            + "<td>" + json.MaturityDate + "</td>"
-                            + "<td>BANK" + json.Owners[i].OwnedBankID + "</td>"
-                            + "<td>" + json.Owners[i].OwnedAccountID + "</td>"
-                            + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedBalance) + "</td>"
-                            + "<td align=right>" + numberWithCommas(BankTotalAmout) + "</td>"
-                            + "<td align=right>" + numberWithCommas(BankTotalInterest) + "</td>"
-                            + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedPaidDurationInterest) + "</td>"
-                            + "<td align=right>" + numberWithCommas(BankPaidDurationInterest) + "</td>"
-                            + "<td>" + OwnedDurationDate + "</td>"
-                            + "</tr>"
-                        $('#bonds').append(htmlCode);
+                      //      + "<td>" + json.RepayPeriod + "</td>"
+                      //      + "<td>" + json.InterestRate + "</td>"
+                      //      + "<td>" + json.IssueDate + "</td>"
+                      //      + "<td>" + json.MaturityDate + "</td>"
+                      //      + "<td>BANK" + json.Owners[i].OwnedBankID + "</td>"
+                      //      + "<td>" + json.Owners[i].OwnedAccountID + "</td>"
+                      //      + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedBalance) + "</td>"
+                      //      + "<td align=right>" + numberWithCommas(BankTotalAmout) + "</td>"
+                      //      + "<td align=right>" + numberWithCommas(BankTotalInterest) + "</td>"
+                      //      + "<td align=right>" + numberWithCommas(json.Owners[i].OwnedPaidDurationInterest) + "</td>"
+                      //      + "<td align=right>" + numberWithCommas(BankPaidDurationInterest) + "</td>"
+                      //      + "<td>" + OwnedDurationDate + "</td>"
+                      //      + "</tr>"
+                      //  $('#bonds').append(htmlCode);
+    
+                        datas[i] = {
+                            "SecurityID": json.SecurityID,
+                            "SecurityName": json.SecurityName,
+                            //"TotalAmount": numberWithCommas(json.TotalAmount),
+                            "RepayPeriod": json.RepayPeriod,
+                            "InterestRate": json.InterestRate+"%",
+                            "IssueDate": json.IssueDate,
+                            "MaturityDate": json.MaturityDate,
+                            "OwnedBankID": "BANK" + json.Owners[i].OwnedBankID,
+                            "OwnedAccountID": json.Owners[i].OwnedAccountID,
+                            "OwnedBalance": numberWithCommas(json.Owners[i].OwnedBalance),
+                            "BankTotalAmout": numberWithCommas(BankTotalAmout),
+                            "BankTotalInterest": numberWithCommas(BankTotalInterest),
+                            "OwnedPaidDurationInterest": numberWithCommas(json.Owners[i].OwnedPaidDurationInterest),
+                            "BankPaidDurationInterest": numberWithCommas(BankPaidDurationInterest),
+                            "OwnedDurationDate": OwnedDurationDate
+                        }
                     }
     
-
+                    $('#reportTable').bootstrapTable({
+                        method: 'get',
+                        cache: false,
+                        striped: true,
+                        pagination: true,
+                        pageSize: 10,
+                        pageNumber: 1,
+                        pageList: [10, 20, 50, 100, 200, 500], sidePagination: 'client',
+                        search: true,
+                        showColumns: true,
+                        showRefresh: false,
+                        showExport: false,
+                        exportTypes: ['csv', 'txt', 'xml'],
+                        search: true,
+                        clickToSelect: true,
+                        columns:
+                            [
+                                { field: "SecurityID", title: "公債<br/>代號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "SecurityName", title: "公債<br/>名稱", align: "left", valign: "middle", sortable: "true" },
+                                //{ field: "TotalAmount", title: "公債發　　<br/>行總額　　", align: "right", valign: "middle", sortable: "true" },
+                                { field: "RepayPeriod", title: "公債<br/>年期", align: "left", valign: "middle", sortable: "true" },
+                                { field: "InterestRate", title: "票面<br/>利率", align: "left", valign: "middle", sortable: "true" },
+                                { field: "IssueDate", title: "公　債<br/>發行日", align: "left", valign: "middle", sortable: "true" },
+                                { field: "MaturityDate", title: "公　債<br/>到期日", align: "left", valign: "middle", sortable: "true" },
+                                { field: "OwnedBankID", title: "清算<br/>銀行", align: "left", valign: "middle", sortable: "true" },
+                                { field: "OwnedAccountID", title: "客戶<br/>帳號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "OwnedBalance", title: "公債<br/>餘額", align: "right", valign: "middle", sortable: "true" },
+                                { field: "BankTotalAmout", title: "公　債<br/>總餘額", align: "right", valign: "middle", sortable: "true" },
+                                { field: "BankTotalInterest", title: "公　債<br/>總利息", align: "right", valign: "middle", sortable: "true" },
+                                { field: "OwnedPaidDurationInterest", title: "已付<br/>利息", align: "right", valign: "middle", sortable: "true" },
+                                { field: "BankPaidDurationInterest", title: "已　付<br/>總利息", align: "right", valign: "middle", sortable: "true" },
+                                { field: "OwnedDurationDate", title: "下　次<br/>付息日", align: "left", valign: "middle", sortable: "true" },
+                            ],
+                        data: datas,
+                    });
 
 
                     // Second ajax call

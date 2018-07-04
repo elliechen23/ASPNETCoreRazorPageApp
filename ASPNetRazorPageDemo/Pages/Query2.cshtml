@@ -92,13 +92,17 @@
 <br />
 
 <div id="divReadBank2TX">
-    <hr>
+    <hr>   
     <div class="col-md-8">
         <label for="bank_id">銀行代號：BANK002</label>&nbsp;&nbsp;&nbsp;&nbsp;
         <button id="searchtx">查詢銀行交易明細</button>
     </div>
     <br />
     <br />
+    <div id="reportTableDiv">
+        <table id="reportTable"></table>
+    </div>
+    <!--
     <div id="result2" class="container">
         <div class="table-responsive">
             <table id="tb3" class="table table-striped table-bordered table-hover sortable" border="1">
@@ -125,32 +129,10 @@
             </table>
         </div>
     </div>
+        -->
 </div>
 
-<!--
-<table id="myTable" class="tablesorter">
-<thead>
-<tr>
-<th>權限</th>
-<th>會員編號</th>
-<th>暱稱</th>
-<th>性別</th>
-<th>註冊時間</th>
-</tr>
-</thead>
-<tbody>
-<tr><td>加值會員</td><td>W00001</td><td>Wayne</td><td>男生</td><td>2014/9/12</td></tr>
-<tr><td>一般會員</td><td>W00002</td><td>Chen</td><td>女生</td><td>2014/9/17</td></tr>
-<tr><td>一般會員</td><td>W00003</td><td>Ken</td><td>男生</td><td>2014/9/17</td></tr>
-<tr><td>一般會員</td><td>W00004</td><td>Sung</td><td>男生</td><td>2014/9/17</td></tr>
-<tr><td>一般會員</td><td>W00005</td><td>Liu</td><td>男生</td><td>2014/9/17</td></tr>
-<tr><td>一般會員</td><td>W00006</td><td>Don</td><td>男生</td><td>2014/9/18</td></tr>
-<tr><td>一般會員</td><td>W00007</td><td>Chan</td><td>女生</td><td>2014/9/18</td></tr>
-<tr><td>一般會員</td><td>W00008</td><td>Tung</td><td>女生</td><td>2014/9/18</td></tr>
-<tr><td>一般會員</td><td>W00009</td><td>陳俊</td><td>男生</td><td>2014/9/18</td></tr>
-<tr><td>一般會員</td><td>W00010</td><td>HY</td><td>男生</td><td>2014/9/18</td></tr>
-</tbody></table>
- -->
+
 
 <br />
 @Html.AntiForgeryToken()
@@ -168,13 +150,6 @@
         //var site = "http://172.20.10.5" + ":4000"
         //var site = "http://192.168.0.104" + ":4000"
         var site = "http://192.168.0.107" + ":4000"
-
-        //$("#myTable").tablesorter({
-        //    theme: "blue",
-        //    widgets: ['zebra']
-        //});
-
-      
     
         $.ajax({
             type: "POST",
@@ -279,14 +254,14 @@
                     }
                     var htmlCode =
                         "<tr>"
-                        + "<td>總計</td>"
+                        + "<td><b>總計</b></td>"
                         + "<td></td>"
                         + "<td>&nbsp;</td>"
                         + "<td>&nbsp;</td>"
                         + "<td>&nbsp;</td>"
-                        + "<td align=right>" + numberWithCommas(TotalBalance) + "</td>"
-                        + "<td align=right>" + numberWithCommas(TotalPosition) + "</td>"
-                        + "<td align=right>" + numberWithCommas(TotalAmount) + "</td>"
+                        + "<td align=right><b>" + numberWithCommas(TotalBalance) + "</b></td>"
+                        + "<td align=right><b>" + numberWithCommas(TotalPosition) + "</b></td>"
+                        + "<td align=right><b>" + numberWithCommas(TotalAmount) + "</b></td>"
                         //+ "<td align=right>" + numberWithCommas(TotalPendingBalance) + "</td>"
                         + "</tr>"
                     $('#bonds').append(htmlCode);
@@ -339,10 +314,18 @@
                 success: function(data) {
                     var data1 = data.replace(' now has', '');
                     var data2 = data1.replace(' after the move', '');
-                    $('#bank').html("")
+                    //$('#bank').html("")
+                    var datas = [];
+                    $('#reportTable').html("");
+                    $('#reportTable').bootstrapTable('destroy');
+
                     var json = JSON.parse(data2);
                     console.log(json);
                     $("#dvPostResult").html("BANK002 " + json[0].Record.docType + " loaded successfully.");
+
+
+
+
                     for (i = 0; i < json.length; i++) {
 
 
@@ -369,32 +352,91 @@
                             TXKIND = "轉入"
                         }
                         if (BANKFROM == BANKTO) {
-                            TXKIND = "自行" + TXKIND
+                            TXKIND = "自行<br/>" + TXKIND
                         }
                         else {
-                            TXKIND = "跨行" + TXKIND
+                            TXKIND = "跨行<br/>" + TXKIND
                         }
 
-                        var htmlCode =
-                            "<tr>"
-                            + "<td>" + json[i].Record.TXID + "</td>"
-                            + "<td>" + TXKIND + "</td>"
-                            + "<td>" + BANKFROM + "</td>"
-                            + "<td>" + TXFROM + "</td>"
-                            + "<td>" + BANKTO + "</td>"
-                            + "<td>" + TXTO + "</td>"
-                            + "<td align=right" + newBalanceStyle + ">" + numberWithCommas(json[i].Record.Payment) + "</td>"
-                            + "<td align=right" + newAmountStyle + ">" + numberWithCommas(json[i].Record.SecurityAmount) + "</td>"
-                            + "<td>" + json[i].Record.SecurityID + "</td>"
-                            + "<td>" + newTXStatus + "</td>"
-                            + "<td>" + json[i].Record.TXMemo + "</td>"
-                            + "<td>" + json[i].Record.TXHcode + "</td>"
-                            + "<td>" + json[i].Record.MatchedTXID + "</td>"
-                            + "<td>" + json[i].Record.createTime + "</td>"
-                            + "<td>" + json[i].Record.updateTime + "</td>"
-                            + "</tr>"
-                        $('#bank').append(htmlCode);
+                       // var htmlCode =
+                       //     "<tr>"
+                       //     + "<td>" + json[i].Record.TXID + "</td>"
+                       //     + "<td>" + TXKIND + "</td>"
+                       //     + "<td>" + BANKFROM + "</td>"
+                       //     + "<td>" + TXFROM + "</td>"
+                       //     + "<td>" + BANKTO + "</td>"
+                       //     + "<td>" + TXTO + "</td>"
+                       //     + "<td align=right" + newBalanceStyle + ">" + numberWithCommas(json[i].Record.Payment) + "</td>"
+                       //     + "<td align=right" + newAmountStyle + ">" + numberWithCommas(json[i].Record.SecurityAmount) + "</td>"
+                       //     + "<td>" + json[i].Record.SecurityID + "</td>"
+                       //     + "<td>" + newTXStatus + "</td>"
+                       //     + "<td>" + json[i].Record.TXMemo + "</td>"
+                       //     + "<td>" + json[i].Record.TXHcode + "</td>"
+                       //     + "<td>" + json[i].Record.MatchedTXID + "</td>"
+                       //     + "<td>" + json[i].Record.createTime + "</td>"
+                       //     + "<td>" + json[i].Record.updateTime + "</td>"
+                       //     + "</tr>"
+                       // $('#bank').append(htmlCode);
+
+                        datas[i] = {
+                            "TXID": json[i].Record.TXID,
+                            "TXType": TXKIND,
+                            "BankFrom": BANKFROM,
+                            "TXFrom": TXFROM,
+                            "BankTo": BANKTO,
+                            "TXTo": TXTO,
+                            "Payment": "<font " + newBalanceStyle + ">" + numberWithCommas(json[i].Record.Payment) + "</font>",
+                            "SecurityAmount": "<font " + newAmountStyle + ">" + numberWithCommas(json[i].Record.SecurityAmount) + "</font>",
+                            "SecurityID": json[i].Record.SecurityID,
+                            "TXStatus": newTXStatus,
+                            "TXMemo": json[i].Record.TXMemo,
+                            "TXHcode": json[i].Record.TXHcode,
+                            "MatchedTXID": json[i].Record.MatchedTXID,
+                            "createTime": json[i].Record.createTime,
+                            "updateTime": json[i].Record.updateTime
+                        }
+
+
+
                     }
+
+                    $('#reportTable').bootstrapTable({
+                        method: 'get',
+                        cache: false,
+                        striped: true,
+                        pagination: true,
+                        pageSize: 5,
+                        pageNumber: 1,
+                        pageList: [5, 10, 20, 50, 100, 200, 500], sidePagination: 'client',
+                        search: true,
+                        showColumns: true,
+                        showRefresh: false,
+                        showExport: false,
+                        exportTypes: ['csv', 'txt', 'xml'],
+                        search: true,
+                        clickToSelect: true,
+                        columns:
+                            [
+                                { field: "TXID", title: "交易<br/>序號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "TXType", title: "交易<br/>型態", align: "left", valign: "middle", sortable: "true" },
+                                { field: "BankFrom", title: "轉出<br/>銀行", align: "left", valign: "middle", sortable: "true" },
+                                { field: "TXFrom", title: "轉出<br/>帳號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "BankTo", title: "轉入<br/>銀行", align: "left", valign: "middle", sortable: "true" },
+                                { field: "TXTo", title: "轉入<br/>帳號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "Payment", title: "交易<br/>面額", align: "right", valign: "middle", sortable: "true" },
+                                { field: "SecurityAmount", title: "交易<br/>金額", align: "right", valign: "middle", sortable: "true" },
+                                { field: "SecurityID", title: "公債<br/>代號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "TXStatus", title: "交易<br/>狀態", align: "left", valign: "middle", sortable: "true" },
+                                { field: "TXMemo", title: "交易說明", align: "left", valign: "middle", sortable: "true" },
+                                { field: "TXHcode", title: "原交易<br/>序號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "MatchedTXID", title: "比對<br/>序號", align: "left", valign: "middle", sortable: "true" },
+                                { field: "createTime", title: "建立<br/>時間", align: "left", valign: "middle", sortable: "true" },
+                                { field: "updateTime", title: "修改<br/>時間", align: "left", valign: "middle", sortable: "true" },
+
+                            ],
+                        data: datas,
+                    });
+
 
                 },
                 error: function(jqXHR) {
@@ -405,6 +447,10 @@
                 beforeSend: function(xhr, settings) { xhr.setRequestHeader('Authorization', 'Bearer ' + $("#token").val()); }
             })
         })
+
+
+
+
 
 
 
